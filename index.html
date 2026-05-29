@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ECBA Study Mesh — Certification Portal</title>
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy:   { DEFAULT: '#001f3f', 50: '#e6edf4', 600: '#001a36', 700: '#00152c', 800: '#001124', 900: '#000b18' },
+            gold:   { DEFAULT: '#c9a227', light: '#e6c75a', dark: '#9c7b16' },
+          },
+          fontFamily: {
+            sans:    ['Inter', 'system-ui', 'sans-serif'],
+            display: ['"Playfair Display"', 'Georgia', 'serif'],
+          },
+          boxShadow: {
+            gold: '0 4px 20px -2px rgba(201,162,39,0.35)',
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ---- Custom polish that complements Tailwind utilities ---- */
+    body { background: #f4f6fa; }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: #00152c; }
+    ::-webkit-scrollbar-thumb { background: #c9a227; border-radius: 6px; }
+
+    .gold-gradient { background: linear-gradient(135deg, #e6c75a 0%, #c9a227 55%, #9c7b16 100%); }
+    .navy-gradient { background: radial-gradient(1200px 500px at 20% -10%, #00386f 0%, #001f3f 45%, #000b18 100%); }
+    .text-gradient-gold {
+      background: linear-gradient(90deg, #e6c75a, #c9a227);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+
+    /* View transition */
+    .view { display: none; animation: fadeUp .45s ease both; }
+    .view.active { display: block; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Sidebar active link */
+    .nav-link.active {
+      background: linear-gradient(90deg, rgba(201,162,39,.18), rgba(201,162,39,0));
+      color: #e6c75a;
+      border-left-color: #c9a227;
+    }
+    .nav-link { border-left: 3px solid transparent; }
+
+    /* Quiz option states */
+    .quiz-option.is-correct   { border-color:#16a34a; background:#f0fdf4; }
+    .quiz-option.is-wrong     { border-color:#dc2626; background:#fef2f2; }
+    .quiz-option.is-selected  { border-color:#c9a227; background:#fffbeb; }
+  </style>
+</head>
+
+<body class="font-sans text-navy antialiased">
+
+  <!-- ============================================================= -->
+  <!-- APP SHELL                                                      -->
+  <!-- ============================================================= -->
+  <div class="flex min-h-screen">
+
+    <!-- ---------------- SIDEBAR ---------------- -->
+    <aside id="sidebar"
+           class="navy-gradient fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col text-white shadow-2xl transition-transform duration-300 lg:translate-x-0">
+
+      <!-- Brand -->
+      <div class="flex items-center gap-3 border-b border-white/10 px-6 py-6">
+        <div class="gold-gradient flex h-11 w-11 items-center justify-center rounded-xl font-display text-xl font-extrabold text-navy shadow-gold">E</div>
+        <div>
+          <h1 class="font-display text-lg font-bold leading-tight">ECBA <span class="text-gradient-gold">Mesh</span></h1>
+          <p class="text-[11px] uppercase tracking-[0.18em] text-white/50">Study Portal</p>
+        </div>
+      </div>
+
+      <!-- Nav -->
+      <nav class="flex-1 space-y-1 px-3 py-6">
+        <p class="px-4 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/35">Navigate</p>
+
+        <a href="#" data-view="home"      class="nav-link active flex items-center gap-3 rounded-r-lg px-4 py-3 text-sm font-medium text-white/80 transition hover:bg-white/5 hover:text-white">
+          <span class="text-lg">🏛️</span> Home
+        </a>
+        <a href="#" data-view="map"       class="nav-link flex items-center gap-3 rounded-r-lg px-4 py-3 text-sm font-medium text-white/80 transition hover:bg-white/5 hover:text-white">
+          <span class="text-lg">🗺️</span> Knowledge Map
+        </a>
+        <a href="#" data-view="mesh"      class="nav-link flex items-center gap-3 rounded-r-lg px-4 py-3 text-sm font-medium text-white/80 transition hover:bg-white/5 hover:text-white">
+          <span class="text-lg">🕸️</span> Master Mesh
+        </a>
+        <a href="#" data-view="test"      class="nav-link flex items-center gap-3 rounded-r-lg px-4 py-3 text-sm font-medium text-white/80 transition hover:bg-white/5 hover:text-white">
+          <span class="text-lg">📝</span> Test View
+        </a>
+      </nav>
+
+      <!-- Progress card -->
+      <div class="mx-4 mb-6 rounded-xl border border-white/10 bg-white/5 p-4">
+        <div class="mb-2 flex items-center justify-between text-xs">
+          <span class="text-white/60">Exam Readiness</span>
+          <span id="readinessPct" class="font-semibold text-gold">0%</span>
+        </div>
+        <div class="h-2 w-full overflow-hidden rounded-full bg-white/10">
+          <div id="readinessBar" class="gold-gradient h-full w-0 rounded-full transition-all duration-700"></div>
+        </div>
+        <p class="mt-3 text-[11px] leading-relaxed text-white/40">Track your journey to certification.</p>
+      </div>
+    </aside>
+
+    <!-- Mobile sidebar backdrop -->
+    <div id="backdrop" class="fixed inset-0 z-30 hidden bg-black/50 lg:hidden"></div>
+
+    <!-- ---------------- MAIN ---------------- -->
+    <div class="flex min-h-screen flex-1 flex-col lg:ml-72">
+
+      <!-- Topbar -->
+      <header class="sticky top-0 z-20 flex items-center justify-between border-b border-navy/10 bg-white/80 px-5 py-3 backdrop-blur">
+        <div class="flex items-center gap-3">
+          <button id="menuBtn" class="rounded-lg p-2 text-navy hover:bg-navy/5 lg:hidden" aria-label="Open menu">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <div>
+            <h2 id="pageTitle" class="font-display text-xl font-bold text-navy">Welcome</h2>
+            <p id="pageCrumb" class="text-xs text-navy/50">ECBA Study Mesh · Home</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="hidden rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold-dark sm:inline">ECBA Candidate</span>
+          <div class="gold-gradient flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-navy">BA</div>
+        </div>
+      </header>
+
+      <!-- Content scroll area -->
+      <main class="flex-1 px-5 py-8 sm:px-8 lg:px-12">
+        <div class="mx-auto max-w-6xl">
+
+          <!-- ================= VIEW: HOME ================= -->
+          <section id="view-home" class="view active">
+            <!-- Hero -->
+            <div class="navy-gradient relative overflow-hidden rounded-3xl px-8 py-14 text-white shadow-2xl sm:px-12">
+              <div class="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-gold/10 blur-2xl"></div>
+              <div class="relative max-w-2xl">
+                <span class="mb-4 inline-block rounded-full border border-gold/40 bg-gold/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-gold">Certification Portal</span>
+                <h1 class="font-display text-4xl font-extrabold leading-tight sm:text-5xl">Master the ECBA Exam</h1>
+                <p class="mt-5 text-lg leading-relaxed text-white/70">Your BABOK v3 study companion. Map the knowledge areas, identify gaps with practice tests, and close them with the Master Mesh.</p>
+                <div class="mt-8 flex flex-wrap gap-4">
+                  <button onclick="navigateTo('test')" class="gold-gradient rounded-xl px-7 py-3 text-sm font-bold text-navy shadow-gold transition hover:brightness-105">Start Practice Exam</button>
+                  <button onclick="navigateTo('map')" class="rounded-xl border border-white/25 px-7 py-3 text-sm font-semibold text-white transition hover:bg-white/10">Explore Knowledge Map</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ROI Highlights -->
+            <div class="mt-10">
+              <div class="mb-5 flex items-end justify-between">
+                <h3 class="font-display text-2xl font-bold text-navy">Why ECBA · <span class="text-gradient-gold">The ROI</span></h3>
+                <span class="text-sm text-navy/40">What's Inside</span>
+              </div>
+              <div id="roiGrid" class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                <!-- Rendered from store.roi -->
+              </div>
+            </div>
+
+            <!-- Exam Strategy -->
+            <div class="mt-12 grid gap-6 lg:grid-cols-3">
+              <div class="lg:col-span-2">
+                <h3 class="mb-5 font-display text-2xl font-bold text-navy">Exam <span class="text-gradient-gold">Strategy</span></h3>
+                <div id="strategyList" class="space-y-4">
+                  <!-- Rendered from store.strategy -->
+                </div>
+              </div>
+              <aside class="rounded-3xl border border-navy/10 bg-white p-7 shadow-sm">
+                <h4 class="font-display text-lg font-bold text-navy">Exam at a Glance</h4>
+                <dl id="examFacts" class="mt-5 space-y-4 text-sm">
+                  <!-- Rendered from store.examFacts -->
+                </dl>
+              </aside>
+            </div>
+          </section>
+
+          <!-- ================= VIEW: KNOWLEDGE MAP ================= -->
+          <section id="view-map" class="view">
+            <div class="mb-8 max-w-2xl">
+              <h1 class="font-display text-3xl font-bold text-navy">Knowledge <span class="text-gradient-gold">Map</span></h1>
+              <p class="mt-2 text-navy/60">A bird's-eye view of the six BABOK v3 Knowledge Areas and their tasks. Use it to frame everything else you study.</p>
+            </div>
+            <div id="knowledgeAreas" class="grid gap-6 md:grid-cols-2">
+              <!-- Rendered from store.knowledgeAreas -->
+            </div>
+          </section>
+
+          <!-- ================= VIEW: MASTER MESH ================= -->
+          <section id="view-mesh" class="view">
+            <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div class="max-w-2xl">
+                <h1 class="font-display text-3xl font-bold text-navy">Master <span class="text-gradient-gold">Mesh</span></h1>
+                <p class="mt-2 text-navy/60">Connect your test performance to specific BABOK concepts. Find a missed concept here and jump straight to the question that tests it.</p>
+              </div>
+              <div class="relative w-full sm:w-80">
+                <svg class="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-navy/40" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="m21 21-4.3-4.3"/></svg>
+                <input id="meshSearch" type="text" placeholder="Search concepts, areas, questions…"
+                       class="w-full rounded-xl border border-navy/15 bg-white py-3 pl-10 pr-4 text-sm text-navy shadow-sm outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/30" />
+              </div>
+            </div>
+
+            <div class="overflow-hidden rounded-2xl border border-navy/10 bg-white shadow-sm">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                  <thead class="navy-gradient text-xs uppercase tracking-wider text-white/80">
+                    <tr>
+                      <th class="px-6 py-4 font-semibold">Concept</th>
+                      <th class="px-6 py-4 font-semibold">Knowledge Area</th>
+                      <th class="px-6 py-4 font-semibold">Linked Question</th>
+                      <th class="px-6 py-4 font-semibold text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="meshTableBody" class="divide-y divide-navy/5">
+                    <!-- Rendered from store.mesh -->
+                  </tbody>
+                </table>
+              </div>
+              <div id="meshEmpty" class="hidden px-6 py-12 text-center text-sm text-navy/40">No matching concepts found.</div>
+            </div>
+          </section>
+
+          <!-- ================= VIEW: TEST ================= -->
+          <section id="view-test" class="view">
+            <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h1 class="font-display text-3xl font-bold text-navy">Practice <span class="text-gradient-gold">Exam</span></h1>
+                <p id="testMeta" class="mt-2 text-navy/60">Simulate the exam. Each question links back to the Master Mesh for instant, targeted review.</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="rounded-xl border border-navy/10 bg-white px-4 py-2 text-center shadow-sm">
+                  <p class="text-[10px] uppercase tracking-wider text-navy/40">Score</p>
+                  <p id="scoreDisplay" class="font-display text-lg font-bold text-gold-dark">0 / 0</p>
+                </div>
+                <button onclick="resetQuiz()" class="rounded-xl border border-navy/15 px-4 py-2.5 text-sm font-semibold text-navy transition hover:bg-navy/5">Restart</button>
+              </div>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="mb-6 flex items-center gap-4">
+              <div class="h-2 flex-1 overflow-hidden rounded-full bg-navy/10">
+                <div id="quizProgress" class="gold-gradient h-full w-0 rounded-full transition-all duration-500"></div>
+              </div>
+              <span id="quizCounter" class="whitespace-nowrap text-xs font-semibold text-navy/50">Q 0 / 0</span>
+            </div>
+
+            <!-- Question card -->
+            <div id="quizCard" class="rounded-3xl border border-navy/10 bg-white p-8 shadow-sm">
+              <!-- Rendered by renderQuestion() -->
+            </div>
+
+            <!-- Results card -->
+            <div id="quizResults" class="hidden rounded-3xl border border-gold/30 bg-gradient-to-br from-white to-gold/5 p-10 text-center shadow-sm">
+              <div class="gold-gradient mx-auto flex h-16 w-16 items-center justify-center rounded-full text-3xl shadow-gold">🏆</div>
+              <h2 class="mt-5 font-display text-3xl font-bold text-navy">Exam Complete</h2>
+              <p id="resultsSummary" class="mt-2 text-navy/60"></p>
+              <p id="resultsScore" class="mt-6 font-display text-5xl font-extrabold text-gradient-gold"></p>
+              <div class="mt-8 flex justify-center gap-4">
+                <button onclick="resetQuiz()" class="gold-gradient rounded-xl px-7 py-3 text-sm font-bold text-navy shadow-gold transition hover:brightness-105">Retake Exam</button>
+                <button onclick="navigateTo('mesh')" class="rounded-xl border border-navy/20 px-7 py-3 text-sm font-semibold text-navy transition hover:bg-navy/5">Review Weak Areas</button>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </main>
+
+      <footer class="border-t border-navy/10 px-8 py-5 text-center text-xs text-navy/40">
+        © 2026 ECBA Mastery Mesh · Study content aligned to BABOK® v3 · Exam facts reflect the IIBA ECBA 2025 update · Unofficial study aid, not affiliated with or endorsed by IIBA. · <span class="text-navy/60">ECBA Study Mesh</span>
+      </footer>
+    </div>
+  </div>
+
+
+  <!-- ============================================================= -->
+  <!-- APPLICATION LOGIC                                              -->
+  <!-- ============================================================= -->
+  <script>
+  /* =================================================================
+     GLOBAL CONTENT STORE
+     -----------------------------------------------------------------
+     Inject your real ECBA data into this object later. The shape of
+     each section is documented inline. Placeholders use {{TOKENS}}.
+     ================================================================= */
+  const store = {
+  "roi": [
+    {
+      "icon": "📈",
+      "stat": "100%",
+      "label": "BABOK Coverage",
+      "note": "All six BABOK v3 knowledge areas mapped"
+    },
+    {
+      "icon": "🧩",
+      "stat": "120",
+      "label": "Practice Questions",
+      "note": "Three full practice tests, 40 questions each"
+    },
+    {
+      "icon": "🎯",
+      "stat": "30",
+      "label": "Mesh Links",
+      "note": "Concepts wired to the questions that test them"
+    },
+    {
+      "icon": "🌐",
+      "stat": "Global",
+      "label": "Recognition",
+      "note": "IIBA-issued, internationally recognized credential"
+    }
+  ],
+  "strategy": [
+    {
+      "step": "01",
+      "title": "Map the Domain",
+      "body": "Review the Knowledge Map to internalize the six BABOK v3 knowledge areas and their tasks."
+    },
+    {
+      "step": "02",
+      "title": "Test and Identify",
+      "body": "Take the practice exam to surface specific gaps, then trace them through the Master Mesh."
+    },
+    {
+      "step": "03",
+      "title": "Targeted Review",
+      "body": "Drill the weak concepts the mesh links to, then re-test to confirm mastery."
+    }
+  ],
+  "examFacts": [
+    {
+      "term": "Questions",
+      "value": "50"
+    },
+    {
+      "term": "Duration",
+      "value": "75 minutes"
+    },
+    {
+      "term": "Format",
+      "value": "Multiple Choice"
+    },
+    {
+      "term": "Pass Mark",
+      "value": "Not disclosed by IIBA"
+    },
+    {
+      "term": "Body",
+      "value": "IIBA"
+    }
+  ],
+  "knowledgeAreas": [
+    {
+      "id": "KA1",
+      "icon": "🧭",
+      "title": "Business Analysis Planning and Monitoring (BAPM)",
+      "weight": "5 tasks",
+      "summary": "Organize and coordinate business analysis effort: define the BA approach, plan stakeholder engagement and governance, manage information, and improve performance.",
+      "concepts": [
+        "1.1 BA Approach",
+        "1.2 Stakeholder Engagement",
+        "1.3 BA Governance",
+        "1.4 Information Management",
+        "1.5 Performance Improvement"
+      ]
+    },
+    {
+      "id": "KA2",
+      "icon": "🔍",
+      "title": "Elicitation and Collaboration (E&C)",
+      "weight": "5 tasks",
+      "summary": "Prepare for, conduct, and confirm elicitation, then communicate business analysis information and sustain stakeholder collaboration.",
+      "concepts": [
+        "2.1 Prepare for Elicitation",
+        "2.2 Conduct Elicitation",
+        "2.3 Confirm Elicitation Results",
+        "2.4 Communicate BA Information",
+        "2.5 Manage Stakeholder Collaboration"
+      ]
+    },
+    {
+      "id": "KA3",
+      "icon": "♻️",
+      "title": "Requirements Life Cycle Management (RLCM)",
+      "weight": "5 tasks",
+      "summary": "Manage requirements across their life cycle: trace, maintain, prioritize, assess changes to, and formally approve requirements and designs.",
+      "concepts": [
+        "3.1 Trace Requirements",
+        "3.2 Maintain Requirements",
+        "3.3 Prioritize Requirements",
+        "3.4 Assess Requirements Changes",
+        "3.5 Approve Requirements"
+      ]
+    },
+    {
+      "id": "KA4",
+      "icon": "🎯",
+      "title": "Strategy Analysis (SA)",
+      "weight": "4 tasks",
+      "summary": "Identify the business need, analyze current and future states, assess risks, and define a viable change strategy.",
+      "concepts": [
+        "4.1 Analyze Current State",
+        "4.2 Define Future State",
+        "4.3 Assess Risks",
+        "4.4 Define Change Strategy"
+      ]
+    },
+    {
+      "id": "KA5",
+      "icon": "📐",
+      "title": "Requirements Analysis and Design Definition (RADD)",
+      "weight": "6 tasks",
+      "summary": "Specify, model, verify, and validate requirements; define requirements architecture and design options; and recommend a solution that delivers value.",
+      "concepts": [
+        "5.1 Specify and Model Requirements",
+        "5.2 Verify Requirements",
+        "5.3 Validate Requirements",
+        "5.4 Define Requirements Architecture",
+        "5.5 Define Design Options",
+        "5.6 Analyze Potential Value and Recommend Solution"
+      ]
+    },
+    {
+      "id": "KA6",
+      "icon": "✅",
+      "title": "Solution Evaluation (SE)",
+      "weight": "5 tasks",
+      "summary": "Measure and analyze solution performance, assess solution and enterprise limitations, and recommend actions to increase delivered value.",
+      "concepts": [
+        "6.1 Measure Solution Performance",
+        "6.2 Analyze Performance Measures",
+        "6.3 Assess Solution Limitations",
+        "6.4 Assess Enterprise Limitations",
+        "6.5 Recommend Actions to Increase Solution Value"
+      ]
+    }
+  ],
+  "mesh": [
+    {
+      "concept": "1.1 BA Approach",
+      "area": "Business Analysis Planning and Monitoring (BAPM)",
+      "question": "Predictive vs. Adaptive approaches",
+      "questionIndex": 0
+    },
+    {
+      "concept": "1.2 Stakeholder Engagement",
+      "area": "Business Analysis Planning and Monitoring (BAPM)",
+      "question": "Identification, analysis, and engagement",
+      "questionIndex": 1
+    },
+    {
+      "concept": "1.3 BA Governance",
+      "area": "Business Analysis Planning and Monitoring (BAPM)",
+      "question": "Decision-making and change control",
+      "questionIndex": 2
+    },
+    {
+      "concept": "1.4 Information Management",
+      "area": "Business Analysis Planning and Monitoring (BAPM)",
+      "question": "Organization and storage of BA info",
+      "questionIndex": 18
+    },
+    {
+      "concept": "1.5 Performance Improvement",
+      "area": "Business Analysis Planning and Monitoring (BAPM)",
+      "question": "Monitoring and improving BA process",
+      "questionIndex": -1
+    },
+    {
+      "concept": "2.1 Prepare for Elicitation",
+      "area": "Elicitation and Collaboration (E&C)",
+      "question": "Planning and technique selection",
+      "questionIndex": 17
+    },
+    {
+      "concept": "2.2 Conduct Elicitation",
+      "area": "Elicitation and Collaboration (E&C)",
+      "question": "Executing and capturing results",
+      "questionIndex": 5
+    },
+    {
+      "concept": "2.3 Confirm Elicitation Results",
+      "area": "Elicitation and Collaboration (E&C)",
+      "question": "Validation and conflict resolution",
+      "questionIndex": 4
+    },
+    {
+      "concept": "2.4 Communicate BA Information",
+      "area": "Elicitation and Collaboration (E&C)",
+      "question": "Tailoring and sharing info",
+      "questionIndex": 32
+    },
+    {
+      "concept": "2.5 Manage Stakeholder Collaboration",
+      "area": "Elicitation and Collaboration (E&C)",
+      "question": "Maintaining engagement",
+      "questionIndex": -1
+    },
+    {
+      "concept": "3.1 Trace Requirements",
+      "area": "Requirements Life Cycle Management (RLCM)",
+      "question": "Traceability and alignment",
+      "questionIndex": 3
+    },
+    {
+      "concept": "3.2 Maintain Requirements",
+      "area": "Requirements Life Cycle Management (RLCM)",
+      "question": "Accuracy and upkeep",
+      "questionIndex": 7
+    },
+    {
+      "concept": "3.3 Prioritize Requirements",
+      "area": "Requirements Life Cycle Management (RLCM)",
+      "question": "Value, risk, and urgency ranking",
+      "questionIndex": 6
+    },
+    {
+      "concept": "3.4 Assess Requirements Changes",
+      "area": "Requirements Life Cycle Management (RLCM)",
+      "question": "Impact analysis of changes",
+      "questionIndex": 7
+    },
+    {
+      "concept": "3.5 Approve Requirements",
+      "area": "Requirements Life Cycle Management (RLCM)",
+      "question": "Formal sign-off",
+      "questionIndex": 22
+    },
+    {
+      "concept": "4.1 Analyze Current State",
+      "area": "Strategy Analysis (SA)",
+      "question": "Understanding capabilities and gaps",
+      "questionIndex": 8
+    },
+    {
+      "concept": "4.2 Define Future State",
+      "area": "Strategy Analysis (SA)",
+      "question": "Goals and outcomes",
+      "questionIndex": 9
+    },
+    {
+      "concept": "4.3 Assess Risks",
+      "area": "Strategy Analysis (SA)",
+      "question": "Identifying risks to value",
+      "questionIndex": 37
+    },
+    {
+      "concept": "4.4 Define Change Strategy",
+      "area": "Strategy Analysis (SA)",
+      "question": "Transition planning and gap analysis",
+      "questionIndex": 19
+    },
+    {
+      "concept": "5.1 Specify and Model Requirements",
+      "area": "Requirements Analysis and Design Definition (RADD)",
+      "question": "Diagrams, Use Cases, and Specs",
+      "questionIndex": 11
+    },
+    {
+      "concept": "5.2 Verify Requirements",
+      "area": "Requirements Analysis and Design Definition (RADD)",
+      "question": "Quality, completeness, consistency",
+      "questionIndex": 10
+    },
+    {
+      "concept": "5.3 Validate Requirements",
+      "area": "Requirements Analysis and Design Definition (RADD)",
+      "question": "Business value and alignment",
+      "questionIndex": 10
+    },
+    {
+      "concept": "5.4 Define Requirements Architecture",
+      "area": "Requirements Analysis and Design Definition (RADD)",
+      "question": "Structure and coherence",
+      "questionIndex": 12
+    },
+    {
+      "concept": "5.5 Define Design Options",
+      "area": "Requirements Analysis and Design Definition (RADD)",
+      "question": "Alternative solutions",
+      "questionIndex": 13
+    },
+    {
+      "concept": "5.6 Analyze Potential Value / Recommend",
+      "area": "Requirements Analysis and Design Definition (RADD)",
+      "question": "Cost-Benefit and Recommendation",
+      "questionIndex": 13
+    },
+    {
+      "concept": "6.1 Measure Solution Performance",
+      "area": "Solution Evaluation (SE)",
+      "question": "Performance metrics and data",
+      "questionIndex": 14
+    },
+    {
+      "concept": "6.2 Analyze Performance Measures",
+      "area": "Solution Evaluation (SE)",
+      "question": "Interpreting metrics and variance",
+      "questionIndex": 33
+    },
+    {
+      "concept": "6.3 Assess Solution Limitations",
+      "area": "Solution Evaluation (SE)",
+      "question": "Internal solution defects",
+      "questionIndex": 15
+    },
+    {
+      "concept": "6.4 Assess Enterprise Limitations",
+      "area": "Solution Evaluation (SE)",
+      "question": "Organizational barriers",
+      "questionIndex": 15
+    },
+    {
+      "concept": "6.5 Recommend Actions to Increase Value",
+      "area": "Solution Evaluation (SE)",
+      "question": "Improvement suggestions",
+      "questionIndex": 24
+    }
+  ],
+  "test": {
+    "title": "ECBA Comprehensive Practice Exam",
+    "questions": [
+      {
+        "prompt": "A Business Analyst (BA) is determining whether to use a predictive (waterfall) or adaptive (agile) approach for a project. Which Knowledge Area does this activity primarily belong to?",
+        "options": [
+          "Strategy Analysis",
+          "Business Analysis Planning and Monitoring",
+          "Requirements Analysis and Design Definition",
+          "Solution Evaluation"
+        ],
+        "answer": 1,
+        "explanation": "Choosing the BA approach (predictive vs. adaptive) is a core task of Business Analysis Planning and Monitoring.",
+        "concept": "Concept 1.1: BA Approach"
+      },
+      {
+        "prompt": "Which of the following is a primary goal of 'Stakeholder Analysis'?",
+        "options": [
+          "To define the final solution design.",
+          "To identify stakeholders and understand their influence and impact on the project.",
+          "To prioritize requirements based on business value.",
+          "To validate that the solution meets the business goals."
+        ],
+        "answer": 1,
+        "explanation": "Stakeholder analysis is used to identify stakeholders and understand their role and influence to plan engagement.",
+        "concept": "Concept 1.2: Stakeholder Engagement"
+      },
+      {
+        "prompt": "A BA is creating a document that outlines how requirements will be prioritized and who has the authority to sign off on them. This is an example of:",
+        "options": [
+          "Business Analysis Governance",
+          "Information Management",
+          "Elicitation Preparation",
+          "Requirements Architecture"
+        ],
+        "answer": 0,
+        "explanation": "Governance defines the decision-making process, including prioritization and approval authorities.",
+        "concept": "Concept 1.3: BA Governance"
+      },
+      {
+        "prompt": "What is the main purpose of creating a Traceability Matrix?",
+        "options": [
+          "To document the cost of each requirement.",
+          "To ensure that each requirement is linked to a business objective and can be tracked through the lifecycle.",
+          "To list all stakeholders who requested a specific feature.",
+          "To define the technical architecture of the solution."
+        ],
+        "answer": 1,
+        "explanation": "Traceability ensures that requirements are aligned with business goals and that no requirements are lost during development.",
+        "concept": "Concept 3.1: Trace Requirements"
+      },
+      {
+        "prompt": "During a workshop, a BA notices that two stakeholders have conflicting views on a specific requirement. Which activity should the BA perform to resolve this?",
+        "options": [
+          "Requirements Architecture",
+          "Confirm Elicitation Results",
+          "Solution Evaluation",
+          "Strategy Analysis"
+        ],
+        "answer": 1,
+        "explanation": "Confirming results involves validating the elicited information and resolving conflicts among stakeholders.",
+        "concept": "Concept 2.3: Confirm Elicitation Results"
+      },
+      {
+        "prompt": "Which technique is most appropriate for a BA to use when they need to understand the current state of a business process in detail by observing workers?",
+        "options": [
+          "Brainstorming",
+          "Observation (Job Shadowing)",
+          "Document Analysis",
+          "Survey"
+        ],
+        "answer": 1,
+        "explanation": "Observation is a direct elicitation technique used to understand the actual process as it is performed.",
+        "concept": "Concept 2.2: Conduct Elicitation"
+      },
+      {
+        "prompt": "A BA is using the MoSCoW technique to categorize requirements. What does the 'S' in MoSCoW stand for?",
+        "options": [
+          "Strategic",
+          "Secondary",
+          "Should have",
+          "Standard"
+        ],
+        "answer": 2,
+        "explanation": "MoSCoW stands for Must have, Should have, Could have, and Won't have.",
+        "concept": "Concept 3.3: Prioritize Requirements"
+      },
+      {
+        "prompt": "When a BA evaluates the impact of a requested change to a requirement on other requirements and the overall project scope, they are performing:",
+        "options": [
+          "Requirements Validation",
+          "Requirements Verification",
+          "Assessing Requirements Changes",
+          "Defining the Future State"
+        ],
+        "answer": 2,
+        "explanation": "Assessing changes involves analyzing the impact of a change request on the requirements and the solution.",
+        "concept": "Concept 3.4: Assess Requirements Changes"
+      },
+      {
+        "prompt": "Which of the following is a key component of the 'Current State' analysis in Strategy Analysis?",
+        "options": [
+          "Defining the desired business goals.",
+          "Identifying the gap between the current and future state.",
+          "Understanding the internal and external environment and capabilities.",
+          "recommending a specific software vendor."
+        ],
+        "answer": 2,
+        "explanation": "Analyzing the current state involves understanding the organization's capabilities and its environment.",
+        "concept": "Concept 4.1: Analyze Current State"
+      },
+      {
+        "prompt": "A BA is defining the \"Future State\" by describing the business goals and the intended outcomes of a project. This activity is part of:",
+        "options": [
+          "Solution Evaluation",
+          "Strategy Analysis",
+          "Requirements Life Cycle Management",
+          "Elicitation and Collaboration"
+        ],
+        "answer": 1,
+        "explanation": "Defining the future state is a core task of Strategy Analysis.",
+        "concept": "Concept 4.2: Define Future State"
+      },
+      {
+        "prompt": "What is the primary difference between 'Verify' and 'Validate' in the context of requirements?",
+        "options": [
+          "Verification is about business value; Validation is about technical correctness.",
+          "Verification ensures requirements are well-formed and consistent; Validation ensures they meet the business need.",
+          "Verification is done by the developer; Validation is done by the BA.",
+          "There is no difference."
+        ],
+        "answer": 1,
+        "explanation": "Verification checks if the requirement is written correctly (quality); Validation checks if it is the *right* requirement for the business.",
+        "concept": "Concept 5.2: Verify Requirements vs Concept 5.3: Validate Requirements"
+      },
+      {
+        "prompt": "A BA is creating a Use Case diagram to visually represent the interactions between actors and the system. This activity is known as:",
+        "options": [
+          "Requirements Validation",
+          "Specifying and Modeling Requirements",
+          "Defining the BA Approach",
+          "Measuring Solution Performance"
+        ],
+        "answer": 1,
+        "explanation": "Modeling requirements using diagrams like Use Cases is a core part of RADD.",
+        "concept": "Concept 5.1: Specify and Model Requirements"
+      },
+      {
+        "prompt": "Which of the following best describes 'Requirements Architecture'?",
+        "options": [
+          "The technical layout of the server and database.",
+          "The structure of requirements that ensures they are coherent and aligned.",
+          "The process of getting a requirement approved by a manager.",
+          "The list of all requirements in a spreadsheet."
+        ],
+        "answer": 1,
+        "explanation": "Requirements architecture is the structure and organization of requirements to ensure they are consistent and complete.",
+        "concept": "Concept 5.4: Define Requirements Architecture"
+      },
+      {
+        "prompt": "A BA is analyzing different software options to see which one best meets the business needs, considering both costs and benefits. This is an example of:",
+        "options": [
+          "Defining Design Options",
+          "Analyzing Potential Value and Recommending a Solution",
+          "Strategy Analysis",
+          "Elicitation Preparation"
+        ],
+        "answer": 1,
+        "explanation": "This task involves evaluating the value of options and making a recommendation.",
+        "concept": "Concept 5.6: Analyze Potential Value and Recommend Solution"
+      },
+      {
+        "prompt": "Once a solution is implemented, a BA collects data on how many users are adopting the new system to see if it meets the expected adoption rate. This is called:",
+        "options": [
+          "Measuring Solution Performance",
+          "Assessing Enterprise Limitations",
+          "Validating Requirements",
+          "Defining the Future State"
+        ],
+        "answer": 0,
+        "explanation": "Measuring performance involves collecting data to determine how the solution is performing against goals.",
+        "concept": "Concept 6.1: Measure Solution Performance"
+      },
+      {
+        "prompt": "A BA identifies that the main reason a solution is not delivering value is due to a lack of employee training. This is an example of:",
+        "options": [
+          "Measuring Solution Performance",
+          "Assessing Solution Limitations",
+          "Assessing Enterprise Limitations",
+          "Defining Design Options"
+        ],
+        "answer": 2,
+        "explanation": "Enterprise limitations are factors outside the solution itself (like culture, training, or structure) that hinder value.",
+        "concept": "Concept 6.4: Assess Enterprise Limitations"
+      },
+      {
+        "prompt": "Which of the following is an example of a 'Business Requirement'?",
+        "options": [
+          "\"The system must allow users to export reports to PDF.\"",
+          "\"The company wants to increase market share by 10% in the next two years.\"",
+          "\"The API must respond within 200ms.\"",
+          "\"The user shall click a button to submit the form.\""
+        ],
+        "answer": 1,
+        "explanation": "Business requirements describe high-level goals of the organization.",
+        "concept": "Concept 5.1: Specify and Model Requirements"
+      },
+      {
+        "prompt": "What is the purpose of 'Elicitation Preparation'?",
+        "options": [
+          "To write the final requirement specification.",
+          "To determine the best techniques and stakeholders to involve in the elicitation process.",
+          "To test the solution for bugs.",
+          "To get approval for the project budget."
+        ],
+        "answer": 1,
+        "explanation": "Preparation ensures the BA has the right plan and tools to gather information effectively.",
+        "concept": "Concept 2.1: Prepare for Elicitation"
+      },
+      {
+        "prompt": "In the context of BABOK v3, 'Information Management' involves:",
+        "options": [
+          "Writing code for a database.",
+          "Organizing BA information so it is accessible and maintainable.",
+          "Managing the company's IT infrastructure.",
+          "Sending emails to stakeholders."
+        ],
+        "answer": 1,
+        "explanation": "Information management is about the organization and storage of BA work products.",
+        "concept": "Concept 1.4: Information Management"
+      },
+      {
+        "prompt": "'Gap Analysis' is most commonly used in which Knowledge Area?",
+        "options": [
+          "Elicitation and Collaboration",
+          "Strategy Analysis",
+          "Solution Evaluation",
+          "Requirements Life Cycle Management"
+        ],
+        "answer": 1,
+        "explanation": "Gap analysis compares the current state to the future state to identify what needs to change.",
+        "concept": "Concept 4.4: Define Change Strategy"
+      },
+      {
+        "prompt": "Which of the following is a 'Non-Functional Requirement'?",
+        "options": [
+          "\"The system must calculate taxes based on the state.\"",
+          "\"The system must be available 99.9% of the time.\"",
+          "\"Users must be able to reset their passwords.\"",
+          "\"The system must integrate with the CRM.\""
+        ],
+        "answer": 1,
+        "explanation": "Non-functional requirements describe qualities or constraints (performance, availability, security) rather than specific behaviors.",
+        "concept": "Concept 5.1: Specify and Model Requirements"
+      },
+      {
+        "prompt": "A BA is facilitating a session to gather ideas for a new product feature. Which technique is most likely being used?",
+        "options": [
+          "Document Analysis",
+          "Brainstorming",
+          "Observation",
+          "Interface Analysis"
+        ],
+        "answer": 1,
+        "explanation": "Brainstorming is used to generate a large number of ideas in a short time.",
+        "concept": "Concept 2.2: Conduct Elicitation"
+      },
+      {
+        "prompt": "What happens during the 'Approve Requirements' task?",
+        "options": [
+          "The BA writes the requirements.",
+          "Stakeholders formally agree that the requirements are correct and complete.",
+          "The developer starts coding the features.",
+          "The project manager assigns tasks to the team."
+        ],
+        "answer": 1,
+        "explanation": "Approval is the formal sign-off that requirements are accepted as the basis for the solution.",
+        "concept": "Concept 3.5: Approve Requirements"
+      },
+      {
+        "prompt": "Which of the following is a 'Solution Limitation'?",
+        "options": [
+          "The company's outdated corporate culture.",
+          "A bug in the software that prevents users from saving data.",
+          "A lack of budget for the project.",
+          "A change in government regulations."
+        ],
+        "answer": 1,
+        "explanation": "Solution limitations are defects or missing features within the solution itself.",
+        "concept": "Concept 6.3: Assess Solution Limitations"
+      },
+      {
+        "prompt": "If a BA is recommending a specific set of changes to improve the value of an existing solution, they are performing:",
+        "options": [
+          "Strategy Analysis",
+          "Recommend Actions to Increase Solution Value",
+          "Requirements Validation",
+          "Elicitation and Collaboration"
+        ],
+        "answer": 1,
+        "explanation": "This is the final task of Solution Evaluation, focused on increasing value.",
+        "concept": "Concept 6.5: Recommend Actions to Increase Solution Value"
+      },
+      {
+        "prompt": "'User Stories' are typically used in which BA approach?",
+        "options": [
+          "Predictive",
+          "Adaptive",
+          "Waterfall",
+          "Traditional"
+        ],
+        "answer": 1,
+        "explanation": "User stories are a hallmark of adaptive/agile approaches.",
+        "concept": "Concept 1.1: BA Approach"
+      },
+      {
+        "prompt": "Which of the following is a 'Stakeholder' in a BA context?",
+        "options": [
+          "Only the project manager.",
+          "Only the end-user.",
+          "Anyone with a vested interest in the change or the solution.",
+          "Only the person paying for the project."
+        ],
+        "answer": 2,
+        "explanation": "A stakeholder is anyone who can affect or be affected by the change.",
+        "concept": "Concept 1.2: Stakeholder Engagement"
+      },
+      {
+        "prompt": "What is 'Requirement Prioritization'?",
+        "options": [
+          "Ordering requirements by the date they were requested.",
+          "Ranking requirements based on value, risk, urgency, or other criteria.",
+          "Listing requirements alphabetically.",
+          "Removing all requirements that are too difficult to implement."
+        ],
+        "answer": 1,
+        "explanation": "Prioritization helps the team focus on the most valuable work first.",
+        "concept": "Concept 3.3: Prioritize Requirements"
+      },
+      {
+        "prompt": "Which technique involves reviewing existing documentation to find requirements?",
+        "options": [
+          "Survey",
+          "Document Analysis",
+          "Interface Analysis",
+          "Workshop"
+        ],
+        "answer": 1,
+        "explanation": "Document analysis is the process of extracting information from existing manuals, reports, and laws.",
+        "concept": "Concept 2.2: Conduct Elicitation"
+      },
+      {
+        "prompt": "'Defining the Change Strategy' includes which of the following?",
+        "options": [
+          "Creating a detailed technical design.",
+          "Developing a plan to move from the current state to the future state.",
+          "Measuring the performance of the final solution.",
+          "Identifying every single user of the system."
+        ],
+        "answer": 1,
+        "explanation": "Change strategy is the high-level plan for transition.",
+        "concept": "Concept 4.4: Define Change Strategy"
+      },
+      {
+        "prompt": "A 'Data Flow Diagram' is an example of:",
+        "options": [
+          "Business Analysis Governance",
+          "Specifying and Modeling Requirements",
+          "Stakeholder Analysis",
+          "Solution Performance Measurement"
+        ],
+        "answer": 1,
+        "explanation": "DFDs are models used to represent how data moves through a system.",
+        "concept": "Concept 5.1: Specify and Model Requirements"
+      },
+      {
+        "prompt": "When a BA checks if a requirement is clear, concise, and testable, they are performing:",
+        "options": [
+          "Requirements Validation",
+          "Requirements Verification",
+          "Requirements Prioritization",
+          "Solution Evaluation"
+        ],
+        "answer": 1,
+        "explanation": "Verification checks for quality and correctness of the requirement's description.",
+        "concept": "Concept 5.2: Verify Requirements"
+      },
+      {
+        "prompt": "Which of the following is a goal of 'Communicate BA Information'?",
+        "options": [
+          "To hide problems from the client.",
+          "To ensure stakeholders have the right information at the right time.",
+          "To write as much documentation as possible.",
+          "To avoid talking to stakeholders."
+        ],
+        "answer": 1,
+        "explanation": "Communication ensures transparency and alignment.",
+        "concept": "Concept 2.4: Communicate BA Information"
+      },
+      {
+        "prompt": "'Analyzing Performance Measures' involves:",
+        "options": [
+          "Deciding who gets a bonus.",
+          "Interpreting the data collected to identify variances.",
+          "Writing the code to calculate the metrics.",
+          "Defining the business goals for the next 5 years."
+        ],
+        "answer": 1,
+        "explanation": "Analysis is about making sense of the measured data.",
+        "concept": "Concept 6.2: Analyze Performance Measures"
+      },
+      {
+        "prompt": "What is a 'Constraint' in the context of requirements?",
+        "options": [
+          "A feature the user really wants.",
+          "A limitation that restricts the solution (e.g., budget, time, regulation).",
+          "A bug in the system.",
+          "A business goal."
+        ],
+        "answer": 1,
+        "explanation": "Constraints are boundaries that must be respected.",
+        "concept": "Concept 5.1: Specify and Model Requirements"
+      },
+      {
+        "prompt": "Which task involves managing the 'Request for Change' process?",
+        "options": [
+          "Elicitation and Collaboration",
+          "Requirements Life Cycle Management",
+          "Strategy Analysis",
+          "Solution Evaluation"
+        ],
+        "answer": 1,
+        "explanation": "Change management is a key part of the requirements lifecycle.",
+        "concept": "Concept 3.4: Assess Requirements Changes"
+      },
+      {
+        "prompt": "'Defining Design Options' involves:",
+        "options": [
+          "Buying the cheapest software available.",
+          "Creating multiple ways the requirements could be implemented.",
+          "Writing the final user manual.",
+          "Testing the solution for performance."
+        ],
+        "answer": 1,
+        "explanation": "Design options allow the BA to compare different ways of solving the problem.",
+        "concept": "Concept 5.5: Define Design Options"
+      },
+      {
+        "prompt": "'Assessing Risks' in Strategy Analysis focuses on:",
+        "options": [
+          "The risk of a developer quitting.",
+          "The risk that the future state will not deliver the expected value.",
+          "The risk of a computer crashing.",
+          "The risk of a typo in the documentation."
+        ],
+        "answer": 1,
+        "explanation": "Strategy risks are high-level risks related to the business outcome.",
+        "concept": "Concept 4.3: Assess Risks"
+      },
+      {
+        "prompt": "Which of the following is a tool for 'Information Management'?",
+        "options": [
+          "A whiteboard.",
+          "A requirements repository (e.g., Jira, Confluence).",
+          "A telephone.",
+          "A calculator."
+        ],
+        "answer": 1,
+        "explanation": "Repositories are used to store and organize BA work.",
+        "concept": "Concept 1.4: Information Management"
+      },
+      {
+        "prompt": "What is the primary focus of 'Solution Evaluation'?",
+        "options": [
+          "Designing the user interface.",
+          "Determining if the solution is actually delivering the expected value.",
+          "Gathering requirements for the first time.",
+          "Planning the BA approach."
+        ],
+        "answer": 1,
+        "explanation": "Solution evaluation is about measuring value and suggesting improvements.",
+        "concept": "Concept 6.1: Measure Solution Performance"
+      },
+      {
+        "prompt": "A BA is planning the BA approach for a project with very high uncertainty and rapidly changing requirements. Which approach is most recommended?",
+        "options": [
+          "Predictive",
+          "Adaptive",
+          "Traditional",
+          "Rigid"
+        ],
+        "answer": 1,
+        "explanation": "Adaptive approaches (like Agile) are designed for uncertainty and frequent change.",
+        "concept": "Concept 1.1: BA Approach"
+      },
+      {
+        "prompt": "Which technique would a BA use to identify stakeholders by looking at an organization chart?",
+        "options": [
+          "Brainstorming",
+          "Document Analysis",
+          "Stakeholder Map / Organizational Chart Analysis",
+          "Survey"
+        ],
+        "answer": 2,
+        "explanation": "Analyzing organizational charts is a primary way to identify formal stakeholders.",
+        "concept": "Concept 1.2: Stakeholder Engagement"
+      },
+      {
+        "prompt": "A BA is defining the \"Change Control Process\". This process decides how changes to requirements are submitted, analyzed, and approved. This is part of:",
+        "options": [
+          "Information Management",
+          "BA Governance",
+          "Elicitation Preparation",
+          "Solution Evaluation"
+        ],
+        "answer": 1,
+        "explanation": "Governance includes the rules for change control.",
+        "concept": "Concept 1.3: BA Governance"
+      },
+      {
+        "prompt": "'Requirements Traceability' refers to:",
+        "options": [
+          "Tracking the time it takes to write a requirement.",
+          "The ability to track a requirement from its origin to its implementation and testing.",
+          "Following a stakeholder throughout the project.",
+          "Recording the version history of a document."
+        ],
+        "answer": 1,
+        "explanation": "Traceability links requirements across different levels (Business -> Stakeholder -> Solution).",
+        "concept": "Concept 3.1: Trace Requirements"
+      },
+      {
+        "prompt": "What is the primary objective of 'Confirming Elicitation Results'?",
+        "options": [
+          "To start the coding process.",
+          "To ensure the BA's understanding of the elicited information is accurate and agreed upon by stakeholders.",
+          "To change the project scope.",
+          "To assign a priority to each requirement."
+        ],
+        "answer": 1,
+        "explanation": "Confirmation prevents misunderstandings from becoming costly errors later.",
+        "concept": "Concept 2.3: Confirm Elicitation Results"
+      },
+      {
+        "prompt": "A BA is conducting an 'Interview' with a subject matter expert. This is an example of:",
+        "options": [
+          "Document Analysis",
+          "Conduct Elicitation",
+          "Solution Evaluation",
+          "Strategy Analysis"
+        ],
+        "answer": 1,
+        "explanation": "Interviews are a classic elicitation technique.",
+        "concept": "Concept 2.2: Conduct Elicitation"
+      },
+      {
+        "prompt": "Which prioritization method involves categorizing requirements into \"High\", \"Medium\", and \"Low\" priority?",
+        "options": [
+          "MoSCoW",
+          "Numerical Analysis",
+          "Qualitative Ranking",
+          "Time-boxing"
+        ],
+        "answer": 2,
+        "explanation": "Qualitative ranking uses categories like High/Medium/Low.",
+        "concept": "Concept 3.3: Prioritize Requirements"
+      },
+      {
+        "prompt": "When a BA maintains requirements, they are primarily ensuring that:",
+        "options": [
+          "Requirements are written in a specific font.",
+          "Requirements remain accurate and up-to-date as the project evolves.",
+          "The project manager is happy.",
+          "The budget is not exceeded."
+        ],
+        "answer": 1,
+        "explanation": "Maintenance involves updating requirements to reflect changes in business needs or solution design.",
+        "concept": "Concept 3.2: Maintain Requirements"
+      },
+      {
+        "prompt": "In Strategy Analysis, 'Analyzing the Current State' helps the BA identify:",
+        "options": [
+          "The exact code to be written.",
+          "The capabilities the organization currently has and the problems it faces.",
+          "The final price of the software.",
+          "The name of the end-user."
+        ],
+        "answer": 1,
+        "explanation": "Current state analysis identifies the \"as-is\" situation.",
+        "concept": "Concept 4.1: Analyze Current State"
+      },
+      {
+        "prompt": "Which of the following is an example of a 'Business Goal' in the Future State definition?",
+        "options": [
+          "\"The system must have a blue login button.\"",
+          "\"Reduce customer churn by 15% within 12 months.\"",
+          "\"The database must use SQL Server.\"",
+          "\"The BA must attend weekly meetings.\""
+        ],
+        "answer": 1,
+        "explanation": "Business goals are high-level, measurable outcomes the organization wants to achieve.",
+        "concept": "Concept 4.2: Define Future State"
+      },
+      {
+        "prompt": "Which of the following is a characteristic of a 'Verified' requirement?",
+        "options": [
+          "It is agreed upon by the CEO.",
+          "It is clear, consistent, and follows the required format.",
+          "It provides a huge amount of money to the company.",
+          "It has been coded into the system."
+        ],
+        "answer": 1,
+        "explanation": "Verification is about quality and correctness of the specification.",
+        "concept": "Concept 5.2: Verify Requirements"
+      },
+      {
+        "prompt": "A BA is creating a 'Process Model' (Flowchart) to show how a business process works. This is part of:",
+        "options": [
+          "Strategy Analysis",
+          "Specifying and Modeling Requirements",
+          "Elicitation Preparation",
+          "BA Governance"
+        ],
+        "answer": 1,
+        "explanation": "Process modeling is a key technique in RADD.",
+        "concept": "Concept 5.1: Specify and Model Requirements"
+      },
+      {
+        "prompt": "'Requirements Architecture' helps a BA to:",
+        "options": [
+          "Build the actual server rack.",
+          "Ensure that requirements are organized in a way that reveals gaps or overlaps.",
+          "Write the user manual.",
+          "Manage the project budget."
+        ],
+        "answer": 1,
+        "explanation": "Architecture provides the structural integrity of the requirements set.",
+        "concept": "Concept 5.4: Define Requirements Architecture"
+      },
+      {
+        "prompt": "When recommending a solution, a BA must consider:",
+        "options": [
+          "Only the cheapest option.",
+          "The potential value, risks, and alignment with business goals.",
+          "Only the opinion of the most senior manager.",
+          "The color of the software interface."
+        ],
+        "answer": 1,
+        "explanation": "A recommendation must be based on a balanced analysis of value and risk.",
+        "concept": "Concept 5.6: Analyze Potential Value and Recommend Solution"
+      },
+      {
+        "prompt": "What is the primary purpose of 'Measuring Solution Performance'?",
+        "options": [
+          "To find out who made a mistake in the code.",
+          "To determine if the solution is achieving the desired business outcomes.",
+          "To write a new set of requirements.",
+          "To increase the project's budget."
+        ],
+        "answer": 1,
+        "explanation": "Performance measurement quantifies the value delivered.",
+        "concept": "Concept 6.1: Measure Solution Performance"
+      },
+      {
+        "prompt": "A BA discovers that users are not using a new feature because the interface is too complex. This is an example of:",
+        "options": [
+          "Enterprise Limitation",
+          "Solution Limitation",
+          "Current State Analysis",
+          "BA Governance"
+        ],
+        "answer": 1,
+        "explanation": "Complexity of the interface is a limitation of the solution itself.",
+        "concept": "Concept 6.3: Assess Solution Limitations"
+      },
+      {
+        "prompt": "Which of the following is a 'Stakeholder Requirement'?",
+        "options": [
+          "\"The company wants to increase revenue.\"",
+          "\"As a Store Manager, I want to be able to generate daily sales reports so I can track performance.\"",
+          "\"The system must be encrypted using AES-256.\"",
+          "\"The project must be completed by December.\""
+        ],
+        "answer": 1,
+        "explanation": "Stakeholder requirements describe the needs of a specific stakeholder group.",
+        "concept": "Concept 5.1: Specify and Model Requirements"
+      },
+      {
+        "prompt": "In 'Elicitation Preparation', a BA creates an 'Elicitation Plan'. What does this plan typically include?",
+        "options": [
+          "The final solution design.",
+          "The stakeholders to be involved, the techniques to be used, and the schedule.",
+          "The project's financial budget.",
+          "The list of all bugs found in the system."
+        ],
+        "answer": 1,
+        "explanation": "The plan ensures elicitation is structured and efficient.",
+        "concept": "Concept 2.1: Prepare for Elicitation"
+      },
+      {
+        "prompt": "'Traceability' is a part of which Knowledge Area?",
+        "options": [
+          "Strategy Analysis",
+          "Requirements Life Cycle Management",
+          "Solution Evaluation",
+          "Elicitation and Collaboration"
+        ],
+        "answer": 1,
+        "explanation": "Traceability is a core task of RLCM.",
+        "concept": "Concept 3.1: Trace Requirements"
+      },
+      {
+        "prompt": "In Strategy Analysis, 'Defining the Change Strategy' focuses on:",
+        "options": [
+          "Writing the code for the new system.",
+          "Evaluating the gap between the current and future state and planning the transition.",
+          "Measuring the success of the solution after one year.",
+          "Interviewing every single employee in the company."
+        ],
+        "answer": 1,
+        "explanation": "Change strategy is about the \"how\" of moving to the future state.",
+        "concept": "Concept 4.4: Define Change Strategy"
+      },
+      {
+        "prompt": "Which of the following is a 'Functional Requirement'?",
+        "options": [
+          "\"The system must be available 24/7.\"",
+          "\"The system shall send an email notification when a new order is placed.\"",
+          "\"The system must be compliant with GDPR.\"",
+          "\"The user interface must be intuitive.\""
+        ],
+        "answer": 1,
+        "explanation": "Functional requirements describe the behavior of the system.",
+        "concept": "Concept 5.1: Specify and Model Requirements"
+      },
+      {
+        "prompt": "Which technique involves using a facilitated group session to reach a consensus on requirements?",
+        "options": [
+          "Document Analysis",
+          "Workshop",
+          "Observation",
+          "Survey"
+        ],
+        "answer": 1,
+        "explanation": "Workshops are highly effective for gathering requirements from multiple stakeholders and reaching agreement.",
+        "concept": "Concept 2.2: Conduct Elicitation"
+      },
+      {
+        "prompt": "When a requirement is 'Approved', it means:",
+        "options": [
+          "It has been coded.",
+          "It has been tested.",
+          "It has been formally accepted by the appropriate authority.",
+          "It is no longer needed."
+        ],
+        "answer": 2,
+        "explanation": "Approval is a formal agreement.",
+        "concept": "Concept 3.5: Approve Requirements"
+      },
+      {
+        "prompt": "'Enterprise Limitations' refer to:",
+        "options": [
+          "Bugs in the software.",
+          "Organizational issues (e.g., culture, structure, politics) that hinder value.",
+          "The lack of a fast internet connection.",
+          "The cost of the hardware."
+        ],
+        "answer": 1,
+        "explanation": "Enterprise limitations are external to the solution but internal to the organization.",
+        "concept": "Concept 6.4: Assess Enterprise Limitations"
+      },
+      {
+        "prompt": "'Recommending Actions to Increase Solution Value' might include:",
+        "options": [
+          "Canceling the project.",
+          "Suggesting a new feature, a process change, or additional training.",
+          "Firing the developers.",
+          "Changing the project manager."
+        ],
+        "answer": 1,
+        "explanation": "This task aims to close the gap between actual and potential value.",
+        "concept": "Concept 6.5: Recommend Actions to Increase Solution Value"
+      },
+      {
+        "prompt": "In an adaptive approach, requirements are often managed as a:",
+        "options": [
+          "Fixed specification document.",
+          "Backlog.",
+          "Gantt chart.",
+          "Legal contract."
+        ],
+        "answer": 1,
+        "explanation": "Backlogs are used in adaptive environments to manage and prioritize work.",
+        "concept": "Concept 1.1: BA Approach"
+      },
+      {
+        "prompt": "'Stakeholder Engagement' involves:",
+        "options": [
+          "Only talking to the CEO.",
+          "Managing the relationship and communication with all identified stakeholders.",
+          "Telling stakeholders what to do.",
+          "Avoiding conflict at all costs."
+        ],
+        "answer": 1,
+        "explanation": "Engagement is about maintaining a productive relationship.",
+        "concept": "Concept 1.2: Stakeholder Engagement"
+      },
+      {
+        "prompt": "'Requirements Prioritization' is important because:",
+        "options": [
+          "It makes the documentation look professional.",
+          "It ensures the most critical and valuable requirements are addressed first.",
+          "It allows the BA to ignore difficult requirements.",
+          "It is required by law."
+        ],
+        "answer": 1,
+        "explanation": "Prioritization manages constraints (time, budget) by focusing on value.",
+        "concept": "Concept 3.3: Prioritize Requirements"
+      },
+      {
+        "prompt": "'Interface Analysis' is a technique used to:",
+        "options": [
+          "Design a beautiful website.",
+          "Understand the requirements for the interaction between two systems or a user and a system.",
+          "Interview a stakeholder.",
+          "Prioritize requirements."
+        ],
+        "answer": 1,
+        "explanation": "Interface analysis focuses on the \"touchpoints\" of a system.",
+        "concept": "Concept 2.2: Conduct Elicitation"
+      },
+      {
+        "prompt": "'Analyzing the Current State' is a prerequisite for:",
+        "options": [
+          "Measuring solution performance.",
+          "Defining the future state and the change strategy.",
+          "Writing the user manual.",
+          "Conducting a performance review of the BA."
+        ],
+        "answer": 1,
+        "explanation": "You must know where you are (current state) before you can decide where you want to go (future state).",
+        "concept": "Concept 4.1: Analyze Current State"
+      },
+      {
+        "prompt": "A 'State Transition Diagram' is an example of:",
+        "options": [
+          "BA Governance",
+          "Specifying and Modeling Requirements",
+          "Strategy Analysis",
+          "Solution Evaluation"
+        ],
+        "answer": 1,
+        "explanation": "State diagrams model how an object changes from one state to another.",
+        "concept": "Concept 5.1: Specify and Model Requirements"
+      },
+      {
+        "prompt": "'Requirements Validation' focuses on:",
+        "options": [
+          "Checking if the requirement is spelled correctly.",
+          "Ensuring the requirement actually solves the business problem.",
+          "Making sure the requirement is in the right font.",
+          "Checking if the requirement was written by the BA."
+        ],
+        "answer": 1,
+        "explanation": "Validation is about \"doing the right thing\" for the business.",
+        "concept": "Concept 5.3: Validate Requirements"
+      },
+      {
+        "prompt": "'Communicate BA Information' includes:",
+        "options": [
+          "Only sending emails.",
+          "Choosing the right medium and timing to share BA work products.",
+          "Keeping the requirements secret.",
+          "Only talking to the technical team."
+        ],
+        "answer": 1,
+        "explanation": "Effective communication is tailored to the audience.",
+        "concept": "Concept 2.4: Communicate BA Information"
+      },
+      {
+        "prompt": "In 'Analyze Performance Measures', a 'Variance' is:",
+        "options": [
+          "A type of requirement.",
+          "The difference between the actual performance and the expected performance.",
+          "A bug in the software.",
+          "A change in the project scope."
+        ],
+        "answer": 1,
+        "explanation": "Variance analysis helps identify where the solution is falling short.",
+        "concept": "Concept 6.2: Analyze Performance Measures"
+      },
+      {
+        "prompt": "A 'Business Rule' is:",
+        "options": [
+          "A software bug.",
+          "A policy or constraint that defines how a business operates (e.g., \"Customers must be 18 to buy alcohol\").",
+          "A user story.",
+          "A technical specification."
+        ],
+        "answer": 1,
+        "explanation": "Business rules are policies that must be reflected in the solution.",
+        "concept": "Concept 5.1: Specify and Model Requirements"
+      },
+      {
+        "prompt": "'Assessing Requirements Changes' is a core task of:",
+        "options": [
+          "Elicitation and Collaboration",
+          "Requirements Life Cycle Management",
+          "Strategy Analysis",
+          "Solution Evaluation"
+        ],
+        "answer": 1,
+        "explanation": "Managing changes is central to RLCM.",
+        "concept": "Concept 3.4: Assess Requirements Changes"
+      },
+      {
+        "prompt": "'Defining Design Options' involves:",
+        "options": [
+          "Picking the first solution that comes to mind.",
+          "Creating a set of alternative solutions to compare their value.",
+          "Testing the solution for bugs.",
+          "Writing the final code."
+        ],
+        "answer": 1,
+        "explanation": "Generating options allows for a more informed decision.",
+        "concept": "Concept 5.5: Define Design Options"
+      },
+      {
+        "prompt": "In 'Assess Risks' (Strategy Analysis), a BA might use:",
+        "options": [
+          "A risk matrix (Probability vs. Impact).",
+          "A use case diagram.",
+          "A project Gantt chart.",
+          "A user story map."
+        ],
+        "answer": 0,
+        "explanation": "Risk matrices are standard for analyzing strategic risks.",
+        "concept": "Concept 4.3: Assess Risks"
+      },
+      {
+        "prompt": "A 'Requirements Repository' is used for:",
+        "options": [
+          "Storing the company's financial records.",
+          "Centralizing and managing all requirements for a project.",
+          "Sending emails to the team.",
+          "Drawing diagrams."
+        ],
+        "answer": 1,
+        "explanation": "Repositories ensure a single source of truth for requirements.",
+        "concept": "Concept 1.4: Information Management"
+      },
+      {
+        "prompt": "'Solution Evaluation' starts after:",
+        "options": [
+          "The project is canceled.",
+          "The solution (or a part of it) is implemented and available for use.",
+          "The BA approach is defined.",
+          "The first interview is conducted."
+        ],
+        "answer": 1,
+        "explanation": "You can only evaluate a solution once there is a solution to measure.",
+        "concept": "Concept 6.1: Measure Solution Performance"
+      },
+      {
+        "prompt": "A project has a fixed deadline and a fixed budget, and the requirements are well-understood. Which BA approach is most appropriate?",
+        "options": [
+          "Adaptive",
+          "Predictive",
+          "Hybrid",
+          "Fluid"
+        ],
+        "answer": 1,
+        "explanation": "Predictive (Waterfall) is best when requirements are stable and constraints are fixed.",
+        "concept": "Concept 1.1: BA Approach"
+      },
+      {
+        "prompt": "A BA is performing 'Stakeholder Analysis' and classifies stakeholders into 'High Power / High Interest'. How should the BA typically engage this group?",
+        "options": [
+          "Keep them informed via email.",
+          "Manage them closely.",
+          "Keep them satisfied.",
+          "Monitor them with minimal effort."
+        ],
+        "answer": 1,
+        "explanation": "The Power/Interest grid suggests managing High Power / High Interest stakeholders closely.",
+        "concept": "Concept 1.2: Stakeholder Engagement"
+      },
+      {
+        "prompt": "'BA Governance' is primarily concerned with:",
+        "options": [
+          "Designing the technical architecture.",
+          "The process of how decisions are made and how changes are approved.",
+          "Recording the minutes of every meeting.",
+          "Creating the user interface."
+        ],
+        "answer": 1,
+        "explanation": "Governance is the \"rules of the game\" for the BA process.",
+        "concept": "Concept 1.3: BA Governance"
+      },
+      {
+        "prompt": "Which of the following is an example of 'Horizontal Traceability'?",
+        "options": [
+          "Linking a business requirement to a stakeholder requirement.",
+          "Linking a requirement to a specific test case in the same level of detail.",
+          "Linking a high-level goal to a low-level technical task.",
+          "Linking a requirement to a project budget line."
+        ],
+        "answer": 1,
+        "explanation": "Horizontal traceability links requirements/elements at the same level (e.g., requirement to test case).",
+        "concept": "Concept 3.1: Trace Requirements"
+      },
+      {
+        "prompt": "A BA is conducting a 'Focus Group' to gather feedback on a prototype. This is an example of:",
+        "options": [
+          "Prepare for Elicitation",
+          "Conduct Elicitation",
+          "Confirm Elicitation Results",
+          "Strategy Analysis"
+        ],
+        "answer": 1,
+        "explanation": "Focus groups are a collaborative elicitation technique.",
+        "concept": "Concept 2.2: Conduct Elicitation"
+      },
+      {
+        "prompt": "What is the primary goal of 'Confirming Elicitation Results'?",
+        "options": [
+          "To get a signature from the project manager.",
+          "To ensure the elicited information is accurate and represents the stakeholder's actual needs.",
+          "To write the final specification.",
+          "To start the development phase."
+        ],
+        "answer": 1,
+        "explanation": "Confirmation ensures that the \"as-captured\" requirements match the \"as-intended\" needs.",
+        "concept": "Concept 2.3: Confirm Elicitation Results"
+      },
+      {
+        "prompt": "In the MoSCoW method, a 'Could Have' requirement is:",
+        "options": [
+          "Essential for the project to be considered a success.",
+          "Important but not vital; can be delayed.",
+          "Desirable but will only be included if time and resources permit.",
+          "Explicitly excluded from the current release."
+        ],
+        "answer": 2,
+        "explanation": "'Could have' requirements are \"nice-to-have\" and have the lowest priority of the included items.",
+        "concept": "Concept 3.3: Prioritize Requirements"
+      },
+      {
+        "prompt": "When a BA is 'Maintaining Requirements', they are essentially:",
+        "options": [
+          "Writing the requirements for the first time.",
+          "Managing the requirements' attributes and ensuring they stay relevant over time.",
+          "Deleting all requirements that were not implemented.",
+          "Reporting the BA's hours to the manager."
+        ],
+        "answer": 1,
+        "explanation": "Maintenance involves the ongoing upkeep of the requirements set.",
+        "concept": "Concept 3.2: Maintain Requirements"
+      },
+      {
+        "prompt": "A BA is analyzing a company's current 'Capabilities' to see if they can support a new digital transformation. This is part of:",
+        "options": [
+          "Define Future State",
+          "Analyze Current State",
+          "Solution Evaluation",
+          "Requirements Architecture"
+        ],
+        "answer": 1,
+        "explanation": "Capability analysis is a core part of understanding the current state.",
+        "concept": "Concept 4.1: Analyze Current State"
+      },
+      {
+        "prompt": "'Defining the Future State' focuses on:",
+        "options": [
+          "The current problems of the business.",
+          "The desired business goals and the outcome of the change.",
+          "The technical specifications of the server.",
+          "The list of people who will be fired."
+        ],
+        "answer": 1,
+        "explanation": "Future state is the \"to-be\" vision.",
+        "concept": "Concept 4.2: Define Future State"
+      },
+      {
+        "prompt": "If a BA is checking a requirement to see if it is 'Unambiguous' (meaning it has only one interpretation), they are performing:",
+        "options": [
+          "Requirements Validation",
+          "Requirements Verification",
+          "Requirements Prioritization",
+          "Strategy Analysis"
+        ],
+        "answer": 1,
+        "explanation": "Unambiguity is a quality characteristic checked during verification.",
+        "concept": "Concept 5.2: Verify Requirements"
+      },
+      {
+        "prompt": "Which modeling technique is best for representing the sequence of steps in a business process?",
+        "options": [
+          "Use Case Diagram",
+          "Process Map (Flowchart)",
+          "Data Model",
+          "State Diagram"
+        ],
+        "answer": 1,
+        "explanation": "Process maps specifically show the flow of activities.",
+        "concept": "Concept 5.1: Specify and Model Requirements"
+      },
+      {
+        "prompt": "'Requirements Architecture' ensures that requirements are:",
+        "options": [
+          "All written in the same language.",
+          "Organized and structured so that they are coherent and provide a complete view.",
+          "Approved by the technical lead.",
+          "Stored in a Word document."
+        ],
+        "answer": 1,
+        "explanation": "Architecture is about the structural coherence of the requirements.",
+        "concept": "Concept 5.4: Define Requirements Architecture"
+      },
+      {
+        "prompt": "'Analyzing Potential Value' involves:",
+        "options": [
+          "Guessing how much money the project will make.",
+          "Comparing the estimated benefits of a solution against its costs and risks.",
+          "Asking the CEO what they think the value is.",
+          "Writing the final business case."
+        ],
+        "answer": 1,
+        "explanation": "Value analysis is a systematic comparison of cost vs. benefit.",
+        "concept": "Concept 5.6: Analyze Potential Value and Recommend Solution"
+      },
+      {
+        "prompt": "'Measure Solution Performance' involves collecting data on:",
+        "options": [
+          "How many lines of code the developers wrote.",
+          "The actual outcomes of the solution compared to the expected outcomes.",
+          "How many meetings the BA attended.",
+          "The cost of the hardware."
+        ],
+        "answer": 1,
+        "explanation": "Performance is measured by the value/outcome delivered.",
+        "concept": "Concept 6.1: Measure Solution Performance"
+      },
+      {
+        "prompt": "A BA finds that the company's internal policies are preventing users from using a new feature effectively. This is an:",
+        "options": [
+          "Solution Limitation",
+          "Enterprise Limitation",
+          "Strategy Risk",
+          "Elicitation Error"
+        ],
+        "answer": 1,
+        "explanation": "Internal policies are part of the enterprise environment, not the solution itself.",
+        "concept": "Concept 6.4: Assess Enterprise Limitations"
+      },
+      {
+        "prompt": "Which of the following is a 'Solution Requirement'?",
+        "options": [
+          "\"The company wants to increase its customer base.\"",
+          "\"The system shall provide a search bar on the home page.\"",
+          "\"The project must be finished in 3 months.\"",
+          "\"The user should feel happy using the app.\""
+        ],
+        "answer": 1,
+        "explanation": "Solution requirements describe the specific capabilities of the product.",
+        "concept": "Concept 5.1: Specify and Model Requirements"
+      },
+      {
+        "prompt": "In 'Elicitation Preparation', a BA determines the 'Elicitation Scope'. This means:",
+        "options": [
+          "Deciding how much the project will cost.",
+          "Deciding what information needs to be gathered and from whom.",
+          "Determining the final design of the system.",
+          "Planning the project's release date."
+        ],
+        "answer": 1,
+        "explanation": "Scope defines the boundaries of the elicitation activity.",
+        "concept": "Concept 2.1: Prepare for Elicitation"
+      },
+      {
+        "prompt": "Which of the following is a key part of 'Information Management'?",
+        "options": [
+          "Installing a new operating system.",
+          "Establishing a common terminology (Glossary) for the project.",
+          "Managing the team's vacation schedule.",
+          "Writing a project status report."
+        ],
+        "answer": 1,
+        "explanation": "A glossary is a vital part of managing BA information to ensure everyone speaks the same language.",
+        "concept": "Concept 1.4: Information Management"
+      },
+      {
+        "prompt": "'Define Change Strategy' involves identifying the 'Gap'. A gap is:",
+        "options": [
+          "A mistake in the requirements.",
+          "The difference between the current state and the future state.",
+          "A hole in the project budget.",
+          "A period of time where no work is done."
+        ],
+        "answer": 1,
+        "explanation": "Gap analysis identifies what is missing to reach the future state.",
+        "concept": "Concept 4.4: Define Change Strategy"
+      },
+      {
+        "prompt": "Which of the following is a 'Quality of Service' requirement?",
+        "options": [
+          "\"The system must support 1,000 concurrent users.\"",
+          "\"The system must calculate the total price.\"",
+          "\"The system must be developed in Java.\"",
+          "\"The system must allow users to log in.\""
+        ],
+        "answer": 0,
+        "explanation": "Quality of Service (scalability, performance) is a non-functional requirement.",
+        "concept": "Concept 5.1: Specify and Model Requirements"
+      },
+      {
+        "prompt": "A BA is using a 'Questionnaire' to gather requirements from 500 users across different cities. This is an example of:",
+        "options": [
+          "Interview",
+          "Survey",
+          "Observation",
+          "Document Analysis"
+        ],
+        "answer": 1,
+        "explanation": "Surveys are used to gather information from a large, distributed group.",
+        "concept": "Concept 2.2: Conduct Elicitation"
+      },
+      {
+        "prompt": "When a BA 'Approves' a requirement, they are typically looking for:",
+        "options": [
+          "A technical sign-off from the developer.",
+          "A business sign-off that the requirement is accurate and provides value.",
+          "A confirmation that the budget is available.",
+          "A date for the release."
+        ],
+        "answer": 1,
+        "explanation": "Approval confirms the business value and accuracy.",
+        "concept": "Concept 3.5: Approve Requirements"
+      },
+      {
+        "prompt": "A 'Solution Limitation' is something that:",
+        "options": [
+          "Is a result of a bad company culture.",
+          "Reduces the value of the solution but is internal to the solution itself.",
+          "Is a law that the company must follow.",
+          "Is a request from a stakeholder."
+        ],
+        "answer": 1,
+        "explanation": "Solution limitations are inherent to the product.",
+        "concept": "Concept 6.3: Assess Solution Limitations"
+      },
+      {
+        "prompt": "If a BA recommends 'Additional Training' for users to increase the value of a solution, they are performing:",
+        "options": [
+          "Strategy Analysis",
+          "Recommend Actions to Increase Solution Value",
+          "Requirements Validation",
+          "BA Planning"
+        ],
+        "answer": 1,
+        "explanation": "Training is a common action to address enterprise limitations and increase value.",
+        "concept": "Concept 6.5: Recommend Actions to Increase Solution Value"
+      },
+      {
+        "prompt": "In an adaptive approach, 'Requirements' are often evolved through:",
+        "options": [
+          "A single, massive sign-off at the beginning.",
+          "Iterative cycles of elicitation, analysis, and validation.",
+          "A rigid set of change requests.",
+          "A legal contract that cannot be changed."
+        ],
+        "answer": 1,
+        "explanation": "Adaptive approaches embrace evolution through iteration.",
+        "concept": "Concept 1.1: BA Approach"
+      },
+      {
+        "prompt": "'Stakeholder Analysis' typically involves identifying the 'RACI' matrix. What does RACI stand for?",
+        "options": [
+          "Requirements, Analysis, Cost, Implementation",
+          "Responsible, Accountable, Consulted, Informed",
+          "Risk, Action, Change, Impact",
+          "Review, Approve, Confirm, Implement"
+        ],
+        "answer": 1,
+        "explanation": "RACI is used to define roles and responsibilities.",
+        "concept": "Concept 1.2: Stakeholder Engagement"
+      },
+      {
+        "prompt": "'Prioritizing Requirements' helps the team to:",
+        "options": [
+          "Avoid talking to stakeholders.",
+          "Manage the project scope and focus on high-value deliverables.",
+          "Make the requirements easier to read.",
+          "Increase the project budget."
+        ],
+        "answer": 1,
+        "explanation": "Prioritization ensures value delivery under constraints.",
+        "concept": "Concept 3.3: Prioritize Requirements"
+      },
+      {
+        "prompt": "'Interface Analysis' is particularly useful when:",
+        "options": [
+          "The BA is designing a logo.",
+          "The system must exchange data with other existing systems.",
+          "The BA is interviewing a CEO.",
+          "The project has no budget."
+        ],
+        "answer": 1,
+        "explanation": "Interface analysis is critical for integration projects.",
+        "concept": "Concept 2.2: Conduct Elicitation"
+      },
+      {
+        "prompt": "Which of the following is part of 'Analyze Current State'?",
+        "options": [
+          "Creating a plan for the next 5 years.",
+          "Documenting the existing business processes and their pain points.",
+          "Testing the new software.",
+          "Designing the new database."
+        ],
+        "answer": 1,
+        "explanation": "Understanding \"as-is\" processes and pain points is central to current state analysis.",
+        "concept": "Concept 4.1: Analyze Current State"
+      },
+      {
+        "prompt": "A 'User Story Map' is a way of:",
+        "options": [
+          "Tracking project hours.",
+          "Visualizing the user's journey and organizing requirements.",
+          "Drawing a network diagram.",
+          "Listing all employees in the company."
+        ],
+        "answer": 1,
+        "explanation": "Story mapping helps organize requirements by user journey.",
+        "concept": "Concept 5.1: Specify and Model Requirements"
+      },
+      {
+        "prompt": "'Requirements Validation' asks the question:",
+        "options": [
+          "\"Is this requirement written correctly?\"",
+          "\"Is this the right requirement to solve the business problem?\"",
+          "\"Who wrote this requirement?\"",
+          "\"Is this requirement in the right font?\""
+        ],
+        "answer": 1,
+        "explanation": "Validation is about effectiveness and business value.",
+        "concept": "Concept 5.3: Validate Requirements"
+      },
+      {
+        "prompt": "Which of the following is an example of 'Communicating BA Information'?",
+        "options": [
+          "Writing a requirement in a private notebook.",
+          "Presenting a process model to stakeholders for feedback.",
+          "Thinking about a solution in the shower.",
+          "Deleting a requirement without telling anyone."
+        ],
+        "answer": 1,
+        "explanation": "Communication involves the active sharing of BA work.",
+        "concept": "Concept 2.4: Communicate BA Information"
+      },
+      {
+        "prompt": "In 'Analyze Performance Measures', the BA compares the 'Actual' value to the 'Expected' value. This is called:",
+        "options": [
+          "Gap Analysis",
+          "Variance Analysis",
+          "Risk Analysis",
+          "Interface Analysis"
+        ],
+        "answer": 1,
+        "explanation": "Variance analysis measures the difference between expectation and reality.",
+        "concept": "Concept 6.2: Analyze Performance Measures"
+      },
+      {
+        "prompt": "A 'Functional Requirement' describes:",
+        "options": [
+          "How fast the system must be.",
+          "What the system must do.",
+          "How secure the system must be.",
+          "Who is allowed to use the system."
+        ],
+        "answer": 1,
+        "explanation": "Functional requirements define the behavior/functions.",
+        "concept": "Concept 5.1: Specify and Model Requirements"
+      },
+      {
+        "prompt": "'Requirements Life Cycle Management' starts when:",
+        "options": [
+          "The project is finished.",
+          "The first requirement is identified.",
+          "The software is deployed.",
+          "The budget is approved."
+        ],
+        "answer": 1,
+        "explanation": "RLCM covers the entire lifespan of a requirement.",
+        "concept": "Concept 3.1: Trace Requirements"
+      },
+      {
+        "prompt": "'Defining Design Options' is a way to:",
+        "options": [
+          "Avoid making a decision.",
+          "Explore different ways to achieve the same business goal.",
+          "Increase the cost of the project.",
+          "Make the requirements more complex."
+        ],
+        "answer": 1,
+        "explanation": "Options provide a basis for comparing value and risk.",
+        "concept": "Concept 5.5: Define Design Options"
+      },
+      {
+        "prompt": "Which of the following is a 'Strategic Risk'?",
+        "options": [
+          "A developer getting sick for two days.",
+          "A change in market conditions that makes the project obsolete.",
+          "A typo in the user manual.",
+          "A slow internet connection in the office."
+        ],
+        "answer": 1,
+        "explanation": "Strategic risks impact the overall business goal.",
+        "concept": "Concept 4.3: Assess Risks"
+      },
+      {
+        "prompt": "'Information Management' ensures that:",
+        "options": [
+          "All emails are saved.",
+          "The BA information is consistent, accessible, and traceable.",
+          "The BA is the only person with the information.",
+          "The hardware is upgraded every year."
+        ],
+        "answer": 1,
+        "explanation": "It's about the quality and accessibility of BA data.",
+        "concept": "Concept 1.4: Information Management"
+      },
+      {
+        "prompt": "'Solution Evaluation' is an iterative process. This means:",
+        "options": [
+          "It only happens once at the end.",
+          "It can be performed multiple times to continuously improve the solution.",
+          "It is a linear process.",
+          "It does not involve stakeholders."
+        ],
+        "answer": 1,
+        "explanation": "Continuous evaluation leads to continuous improvement.",
+        "concept": "Concept 6.1: Measure Solution Performance"
+      }
+    ]
+  }
+};
+
+  /* =================================================================
+     NAVIGATION
+     ================================================================= */
+  const VIEW_META = {
+    home: { title: 'Welcome',        crumb: 'Home' },
+    map:  { title: 'Knowledge Map',  crumb: 'Knowledge Map' },
+    mesh: { title: 'Master Mesh',    crumb: 'Master Mesh' },
+    test: { title: 'Practice Exam',  crumb: 'Test View' },
+  };
+
+  function navigateTo(view) {
+    if (!VIEW_META[view]) view = 'home';
+
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + view).classList.add('active');
+
+    document.querySelectorAll('.nav-link').forEach(l =>
+      l.classList.toggle('active', l.dataset.view === view));
+
+    document.getElementById('pageTitle').textContent = VIEW_META[view].title;
+    document.getElementById('pageCrumb').textContent = 'ECBA Study Mesh · ' + VIEW_META[view].crumb;
+
+    closeSidebar();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* Jump from the Mesh straight into a specific test question */
+  function studyConcept(questionIndex) {
+    navigateTo('test');
+    if (typeof questionIndex === 'number' && questionIndex >= 0) {
+      quizState.current = Math.min(questionIndex, store.test.questions.length - 1);
+      renderQuestion();
+    }
+  }
+
+  /* =================================================================
+     RENDERERS
+     ================================================================= */
+  function renderHome() {
+    document.getElementById('roiGrid').innerHTML = store.roi.map(r => `
+      <div class="group rounded-2xl border border-navy/10 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-gold">
+        <div class="gold-gradient mb-4 flex h-11 w-11 items-center justify-center rounded-xl text-xl">${r.icon}</div>
+        <p class="font-display text-3xl font-extrabold text-navy">${r.stat}</p>
+        <p class="mt-1 text-sm font-semibold text-navy/70">${r.label}</p>
+        <p class="mt-2 text-xs leading-relaxed text-navy/45">${r.note}</p>
+      </div>`).join('');
+
+    document.getElementById('strategyList').innerHTML = store.strategy.map(s => `
+      <div class="flex gap-5 rounded-2xl border border-navy/10 bg-white p-6 shadow-sm">
+        <div class="font-display text-3xl font-extrabold text-gold/70">${s.step}</div>
+        <div>
+          <h4 class="font-semibold text-navy">${s.title}</h4>
+          <p class="mt-1 text-sm leading-relaxed text-navy/55">${s.body}</p>
+        </div>
+      </div>`).join('');
+
+    document.getElementById('examFacts').innerHTML = store.examFacts.map(f => `
+      <div class="flex items-center justify-between border-b border-navy/5 pb-3 last:border-0">
+        <dt class="text-navy/50">${f.term}</dt>
+        <dd class="font-semibold text-navy">${f.value}</dd>
+      </div>`).join('');
+  }
+
+  function renderKnowledgeMap() {
+    document.getElementById('knowledgeAreas').innerHTML = store.knowledgeAreas.map(ka => `
+      <article class="flex flex-col rounded-3xl border border-navy/10 bg-white p-7 shadow-sm transition hover:shadow-gold">
+        <div class="flex items-start justify-between">
+          <div class="gold-gradient flex h-12 w-12 items-center justify-center rounded-2xl text-2xl">${ka.icon}</div>
+          <span class="rounded-full bg-navy/5 px-3 py-1 text-xs font-semibold text-navy/60">${ka.weight}</span>
+        </div>
+        <h3 class="mt-5 font-display text-xl font-bold text-navy">${ka.title}</h3>
+        <p class="mt-2 flex-1 text-sm leading-relaxed text-navy/55">${ka.summary}</p>
+        <div class="mt-5 flex flex-wrap gap-2">
+          ${ka.concepts.map(c => `<span class="rounded-lg border border-gold/30 bg-gold/5 px-3 py-1 text-xs font-medium text-gold-dark">${c}</span>`).join('')}
+        </div>
+      </article>`).join('');
+  }
+
+  function renderMesh(filter = '') {
+    const q = filter.trim().toLowerCase();
+    const rows = store.mesh.filter(m =>
+      !q ||
+      m.concept.toLowerCase().includes(q) ||
+      m.area.toLowerCase().includes(q) ||
+      m.question.toLowerCase().includes(q));
+
+    const body = document.getElementById('meshTableBody');
+    const empty = document.getElementById('meshEmpty');
+
+    body.innerHTML = rows.map(m => `
+      <tr class="transition hover:bg-gold/5">
+        <td class="px-6 py-4 font-semibold text-navy">${m.concept}</td>
+        <td class="px-6 py-4 text-navy/60">${m.area}</td>
+        <td class="px-6 py-4 text-navy/60">${m.question}</td>
+        <td class="px-6 py-4 text-center">
+          <button onclick="studyConcept(${m.questionIndex})"
+                  class="rounded-lg border border-gold/40 bg-gold/10 px-4 py-1.5 text-xs font-semibold text-gold-dark transition hover:bg-gold hover:text-navy">
+            Study →
+          </button>
+        </td>
+      </tr>`).join('');
+
+    empty.classList.toggle('hidden', rows.length !== 0);
+  }
+
+  /* =================================================================
+     QUIZ ENGINE
+     ================================================================= */
+  const quizState = { current: 0, score: 0, locked: false, answered: [] };
+
+  function renderQuestion() {
+    const questions = store.test.questions;
+    const i = quizState.current;
+    const total = questions.length;
+    const card = document.getElementById('quizCard');
+
+    document.getElementById('quizResults').classList.add('hidden');
+    card.classList.remove('hidden');
+
+    // Progress UI
+    document.getElementById('quizProgress').style.width = ((i / total) * 100) + '%';
+    document.getElementById('quizCounter').textContent = `Q ${i + 1} / ${total}`;
+    document.getElementById('scoreDisplay').textContent = `${quizState.score} / ${total}`;
+
+    const qd = questions[i];
+    card.innerHTML = `
+      <div class="mb-4 flex items-center justify-between">
+        <span class="rounded-full bg-navy/5 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-navy/50">Question ${i + 1}</span>
+        <span class="text-xs text-navy/40">Concept: <span class="font-semibold text-gold-dark">${qd.concept}</span></span>
+      </div>
+
+      <h3 class="font-display text-xl font-bold leading-snug text-navy sm:text-2xl">${qd.prompt}</h3>
+
+      <div id="optionList" class="mt-7 space-y-3">
+        ${qd.options.map((opt, idx) => `
+          <button data-idx="${idx}" onclick="selectOption(${idx})"
+                  class="quiz-option flex w-full items-center gap-4 rounded-xl border-2 border-navy/10 bg-white px-5 py-4 text-left text-sm font-medium text-navy transition hover:border-gold/50">
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-navy/15 text-xs font-bold text-navy/60">${String.fromCharCode(65 + idx)}</span>
+            <span>${opt}</span>
+          </button>`).join('')}
+      </div>
+
+      <div id="explanation" class="mt-6 hidden rounded-xl border-l-4 border-gold bg-gold/5 p-5 text-sm leading-relaxed text-navy/70">
+        <p class="mb-1 font-semibold text-gold-dark">Explanation</p>
+        <p>${qd.explanation}</p>
+      </div>
+
+      <div class="mt-8 flex flex-wrap items-center justify-between gap-4">
+        <button onclick="studyConcept(${i})" class="text-sm font-semibold text-navy/60 underline-offset-4 hover:text-gold-dark hover:underline">
+          📖 Study Concept in Mesh
+        </button>
+        <div class="flex gap-3">
+          <button id="checkBtn" onclick="checkAnswer()"
+                  class="rounded-xl border border-navy/20 px-6 py-2.5 text-sm font-semibold text-navy transition hover:bg-navy/5">
+            Check Answer
+          </button>
+          <button id="nextBtn" onclick="nextQuestion()"
+                  class="gold-gradient rounded-xl px-6 py-2.5 text-sm font-bold text-navy shadow-gold transition hover:brightness-105">
+            ${i === total - 1 ? 'Finish' : 'Next →'}
+          </button>
+        </div>
+      </div>`;
+
+    quizState.locked = false;
+    quizState.selected = null;
+  }
+
+  function selectOption(idx) {
+    if (quizState.locked) return;
+    quizState.selected = idx;
+    document.querySelectorAll('#optionList .quiz-option').forEach(b =>
+      b.classList.toggle('is-selected', Number(b.dataset.idx) === idx));
+  }
+
+  function checkAnswer() {
+    if (quizState.locked) return;
+    if (quizState.selected == null) { return; }
+
+    const qd = store.test.questions[quizState.current];
+    quizState.locked = true;
+
+    document.querySelectorAll('#optionList .quiz-option').forEach(b => {
+      const idx = Number(b.dataset.idx);
+      b.classList.remove('is-selected');
+      b.disabled = true;
+      if (idx === qd.answer) b.classList.add('is-correct');
+      else if (idx === quizState.selected) b.classList.add('is-wrong');
+    });
+
+    // Score once per question
+    if (!quizState.answered.includes(quizState.current)) {
+      quizState.answered.push(quizState.current);
+      if (quizState.selected === qd.answer) quizState.score++;
+    }
+
+    document.getElementById('explanation').classList.remove('hidden');
+    document.getElementById('checkBtn').disabled = true;
+    document.getElementById('checkBtn').classList.add('opacity-40', 'cursor-not-allowed');
+    document.getElementById('scoreDisplay').textContent = `${quizState.score} / ${store.test.questions.length}`;
+    updateReadiness();
+  }
+
+  function nextQuestion() {
+    const total = store.test.questions.length;
+    if (quizState.current < total - 1) {
+      quizState.current++;
+      renderQuestion();
+    } else {
+      showResults();
+    }
+  }
+
+  function showResults() {
+    const total = store.test.questions.length;
+    const pct = total ? Math.round((quizState.score / total) * 100) : 0;
+    document.getElementById('quizCard').classList.add('hidden');
+    document.getElementById('quizProgress').style.width = '100%';
+    document.getElementById('quizCounter').textContent = `Q ${total} / ${total}`;
+
+    const res = document.getElementById('quizResults');
+    res.classList.remove('hidden');
+    document.getElementById('resultsScore').textContent = pct + '%';
+    document.getElementById('resultsSummary').textContent =
+      `You scored ${quizState.score} out of ${total}. ` +
+      (pct >= 70 ? 'You are on track for the ECBA exam.' : 'Review the Master Mesh and try again.');
+    updateReadiness();
+  }
+
+  function resetQuiz() {
+    quizState.current = 0;
+    quizState.score = 0;
+    quizState.locked = false;
+    quizState.selected = null;
+    quizState.answered = [];
+    document.getElementById('quizResults').classList.add('hidden');
+    renderQuestion();
+    updateReadiness();
+  }
+
+  /* =================================================================
+     READINESS METER (driven by quiz progress)
+     ================================================================= */
+  function updateReadiness() {
+    const total = store.test.questions.length || 1;
+    const pct = Math.round((quizState.answered.length / total) * 100);
+    document.getElementById('readinessBar').style.width = pct + '%';
+    document.getElementById('readinessPct').textContent = pct + '%';
+  }
+
+  /* =================================================================
+     SIDEBAR (mobile)
+     ================================================================= */
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('backdrop');
+  function openSidebar()  { sidebar.classList.remove('-translate-x-full'); backdrop.classList.remove('hidden'); }
+  function closeSidebar() { sidebar.classList.add('-translate-x-full');    backdrop.classList.add('hidden'); }
+
+  /* =================================================================
+     BOOTSTRAP
+     ================================================================= */
+  document.addEventListener('DOMContentLoaded', () => {
+    // Nav clicks
+    document.querySelectorAll('.nav-link').forEach(link =>
+      link.addEventListener('click', e => { e.preventDefault(); navigateTo(link.dataset.view); }));
+
+    // Mesh search
+    document.getElementById('meshSearch').addEventListener('input', e => renderMesh(e.target.value));
+
+    // Mobile menu
+    document.getElementById('menuBtn').addEventListener('click', openSidebar);
+    backdrop.addEventListener('click', closeSidebar);
+
+    // Initial render
+    renderHome();
+    renderKnowledgeMap();
+    renderMesh();
+    renderQuestion();
+    updateReadiness();
+    navigateTo('home');
+  });
+  </script>
+</body>
+</html>
